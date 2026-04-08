@@ -1,6 +1,7 @@
 ﻿# 🧠 MindList —— 思维导图 + 清单任务，双向同步
 
 MindList是一款把「思维导图」和「任务清单」结合在一起的工具。你可以一边梳理结构，一边管理执行进度。
+基于Simple mind map 开源项目基础上编辑 https://github.com/wanglin2/mind-map
 
 ## 立即使用
 
