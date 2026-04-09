@@ -1,4 +1,4 @@
-# MindList
+<img width="1903" height="932" alt="image" src="https://github.com/user-attachments/assets/7b05467a-9378-4624-a710-258bdb70281b" /># MindList
 
 MindList是一款把「思维导图」和「任务清单」结合在一起的工具。你可以一边梳理结构，一边管理执行进度。
 
@@ -16,9 +16,8 @@ MindList = 思维导图 + 清单任务
 
 ---
 📸 功能预览
-- <img width="1280" height="626" alt="image" src="https://github.com/user-attachments/assets/6c0d9fb2-0c34-45c3-86ae-264c3e92a595" />
-- <img width="1280" height="627" alt="image" src="https://github.com/user-attachments/assets/ba4e184f-4467-47df-bf59-44c95c6cb89c" />
-- <img width="1280" height="624" alt="image" src="https://github.com/user-attachments/assets/ed9a7dcd-5399-4b2c-9dd2-0e7d7935b548" />
+<img width="1723" height="852" alt="image" src="https://github.com/user-attachments/assets/5f9db7f3-75be-4bb6-b91d-03422c1b58d8" />
+<img width="1712" height="839" alt="image" src="https://github.com/user-attachments/assets/cd77b5de-9d4e-4754-bd5e-7a7fce4e197e" />
 
 ✨ 核心亮点
 
