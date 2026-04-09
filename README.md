@@ -16,9 +16,9 @@ MindList = 思维导图 + 清单任务
 
 ---
 📸 功能预览
-<img width="1280" height="626" alt="image" src="https://github.com/user-attachments/assets/6c0d9fb2-0c34-45c3-86ae-264c3e92a595" />
-<img width="1280" height="627" alt="image" src="https://github.com/user-attachments/assets/ba4e184f-4467-47df-bf59-44c95c6cb89c" />
-<img width="1280" height="624" alt="image" src="https://github.com/user-attachments/assets/ed9a7dcd-5399-4b2c-9dd2-0e7d7935b548" />
+- <img width="1280" height="626" alt="image" src="https://github.com/user-attachments/assets/6c0d9fb2-0c34-45c3-86ae-264c3e92a595" />
+- <img width="1280" height="627" alt="image" src="https://github.com/user-attachments/assets/ba4e184f-4467-47df-bf59-44c95c6cb89c" />
+- <img width="1280" height="624" alt="image" src="https://github.com/user-attachments/assets/ed9a7dcd-5399-4b2c-9dd2-0e7d7935b548" />
 
 ✨ 核心亮点
 
