@@ -105,6 +105,8 @@ test("desktop packaging targets both macOS and Windows", () => {
   assert.deepEqual(packageJson.build.mac.target, ["dmg", "zip"]);
   assert.deepEqual(packageJson.build.win.target, ["nsis", "portable"]);
   assert.equal(packageJson.devDependencies.electron, "43.2.0");
+  assert.match(packageJson.scripts["dist:mac"], /--publish never/);
+  assert.match(packageJson.scripts["dist:win"], /--publish never/);
 });
 
 test("Windows icon contains a 256px image", () => {

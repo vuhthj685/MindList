@@ -10,8 +10,8 @@
     "build:icons": "node scripts/generate-icons.mjs",
     "start": "electron .",
     "test": "node --test tests/*.test.js && node --check electron/main.js && node --check electron/preload.js",
-    "dist:mac": "electron-builder --mac --x64 --arm64",
-    "dist:win": "electron-builder --win --x64"
+    "dist:mac": "electron-builder --mac --x64 --arm64 --publish never",
+    "dist:win": "electron-builder --win --x64 --publish never"
   },
   "devDependencies": {
     "electron": "43.2.0",
