@@ -12,6 +12,7 @@ const appBundle = read("dist/js/app.js");
 const homeBundle = read("dist/js/chunk-17f86c25.js");
 const mainProcess = read("electron/main.js");
 const packageJson = JSON.parse(read("package.json"));
+const releaseWorkflow = read(".github/workflows/build-release.yml");
 
 test("web entry references every required runtime asset", () => {
   const html = read("dist/index.html");
@@ -120,4 +121,8 @@ test("Windows icon contains a 256px image", () => {
   }
 
   assert.ok(largestWidth >= 256);
+});
+
+test("release publishing identifies the GitHub repository explicitly", () => {
+  assert.match(releaseWorkflow, /GH_REPO: \$\{\{ github\.repository \}\}/);
 });
