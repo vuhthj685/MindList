@@ -107,3 +107,15 @@ test("desktop packaging targets both macOS and Windows", () => {
   assert.equal(packageJson.devDependencies.electron, "43.2.0");
 });
 
+test("Windows icon contains a 256px image", () => {
+  const icon = fs.readFileSync(path.join(root, "build/icon.ico"));
+  const imageCount = icon.readUInt16LE(4);
+  let largestWidth = 0;
+
+  for (let index = 0; index < imageCount; index += 1) {
+    const widthByte = icon[6 + index * 16];
+    largestWidth = Math.max(largestWidth, widthByte === 0 ? 256 : widthByte);
+  }
+
+  assert.ok(largestWidth >= 256);
+});

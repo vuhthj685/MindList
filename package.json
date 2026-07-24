@@ -7,6 +7,7 @@
   "license": "MIT",
   "private": true,
   "scripts": {
+    "build:icons": "node scripts/generate-icons.mjs",
     "start": "electron .",
     "test": "node --test tests/*.test.js && node --check electron/main.js && node --check electron/preload.js",
     "dist:mac": "electron-builder --mac --x64 --arm64",
@@ -14,7 +15,8 @@
   },
   "devDependencies": {
     "electron": "43.2.0",
-    "electron-builder": "26.15.3"
+    "electron-builder": "26.15.3",
+    "png-to-ico": "^3.0.2"
   },
   "build": {
     "appId": "com.vuhthj685.mindlist",
@@ -60,4 +62,3 @@
     }
   }
 }
-
