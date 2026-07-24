@@ -1,17 +1,20 @@
-# MindList 
+# MindList
 MindList是一款把「思维导图」和「任务清单」结合在一起的工具。你可以一边梳理结构，一边管理执行进度。
 
 本项目基于https://github.com/wanglin2/mind-map mind-map基础上进行二次开发！
 ---
 🧠 MindList🧾 —— 思维导图 + 清单任务，双向同步
-MindList = 思维导图 + 清单任务  
-在思维导图里勾选节点，清单主页自动同步进度；在清单里打勾，思维导图节点自动完成。  
+MindList = 思维导图 + 清单任务
+在思维导图里勾选节点，清单主页自动同步进度；在清单里打勾，思维导图节点自动完成。
 支持本地文件、多主题、AI 生成、大纲模式、导入/导出……一个工具搞定思考与执行。
 
  👀立即使用
 - 🚀在线网页版（直接打开）：https://vuhthj685.github.io/MindList/
-- 📦安装包下载（Windows）：https://github.com/vuhthj685/MindList/releases/latest
+- 🍎macOS 版（Intel / Apple Silicon）：https://github.com/vuhthj685/MindList/releases/latest
+- 🪟Windows 安装版 / 便携版：https://github.com/vuhthj685/MindList/releases/latest
 - 🗄项目仓库：https://github.com/vuhthj685/MindList
+
+> 当前桌面包尚未使用付费开发者证书签名。macOS 首次打开时如被系统拦截，请在“系统设置 → 隐私与安全性”中选择仍要打开；Windows 可能显示 SmartScreen 提示。
 
 ---
 📸 功能预览
@@ -203,4 +206,4 @@ MindList = 思维导图 + 清单任务
 - 多语言支持（中文、英文、繁体中文、越南语）
 - 暗黑模式开关
 - 富文本模式开关
- 
+

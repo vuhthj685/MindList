@@ -1,0 +1,64 @@
+{
+  "name": "mindlist",
+  "version": "1.1.0",
+  "description": "MindList 思维导图清单桌面客户端",
+  "main": "electron/main.js",
+  "author": "vuhthj685",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "build:icons": "node scripts/generate-icons.mjs",
+    "start": "electron .",
+    "test": "node --test tests/*.test.js && node --check electron/main.js && node --check electron/preload.js",
+    "dist:mac": "electron-builder --mac --x64 --arm64",
+    "dist:win": "electron-builder --win --x64"
+  },
+  "devDependencies": {
+    "electron": "43.2.0",
+    "electron-builder": "26.15.3",
+    "png-to-ico": "^3.0.2"
+  },
+  "build": {
+    "appId": "com.vuhthj685.mindlist",
+    "productName": "MindList",
+    "asar": true,
+    "directories": {
+      "buildResources": "build",
+      "output": "release"
+    },
+    "files": [
+      "electron/**/*",
+      "dist/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "icon": "build/icon.icns",
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "artifactName": "${productName}-${version}-macOS-${arch}.${ext}"
+    },
+    "dmg": {
+      "title": "MindList ${version}"
+    },
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "nsis": {
+      "artifactName": "${productName}-${version}-Windows-Setup-${arch}.${ext}",
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "portable": {
+      "artifactName": "${productName}-${version}-Windows-Portable-${arch}.${ext}"
+    }
+  }
+}
