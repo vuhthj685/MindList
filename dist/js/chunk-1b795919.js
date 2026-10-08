@@ -62089,18 +62089,21 @@ PERFORMANCE OF THIS SOFTWARE.
           }
           e && this.mindMap.reRender();
         }
-        copy() {
-          ((this.beingCopyData = this.copyNode()),
-            this.beingCopyData &&
-              (this.mindMap.opt.disabledClipboard ||
-                Object(b["sb"])(Object(b["q"])(this.beingCopyData))));
+        async copy() {
+          this.beingCopyData = this.copyNode();
+          if (!this.beingCopyData || this.mindMap.opt.disabledClipboard) return;
+          try { await Object(b["sb"])(Object(b["q"])(this.beingCopyData)); }
+          catch (error) { this.mindMap.opt.errorHandler("write_clipboard_error", error); }
         }
-        cut() {
-          this.mindMap.execCommand("CUT_NODE", (t) => {
-            ((this.beingCopyData = t),
-              this.mindMap.opt.disabledClipboard ||
-                Object(b["sb"])(Object(b["q"])(t)));
-          });
+        async cut() {
+          if (this.mindMap.opt.readonly) return;
+          const nodes = [...this.activeNodeList].filter(node => !node.isRoot);
+          if (!nodes.length) return;
+          const data = Object(b["ub"])(Object(b["P"])(nodes)).map(node => Object(b["n"])({}, node, !0));
+          try {
+            if (!this.mindMap.opt.disabledClipboard) await Object(b["sb"])(Object(b["q"])(data));
+            this.mindMap.execCommand("CUT_NODE", result => { this.beingCopyData = result; }, nodes);
+          } catch (error) { this.mindMap.opt.errorHandler("write_clipboard_error", error); }
         }
         handlePaste(t) {
           const { disabledClipboard: e } = this.mindMap.opt;
@@ -62116,6 +62119,7 @@ PERFORMANCE OF THIS SOFTWARE.
             this.paste());
         }
         async paste() {
+          if (this.mindMap.opt.readonly) return;
           const {
             errorHandler: t,
             handleIsSplitByWrapOnPasteCreateNewNode: e,
@@ -62325,9 +62329,9 @@ PERFORMANCE OF THIS SOFTWARE.
             t.map((t) => Object(b["n"])({}, t, !0))
           );
         }
-        cutNode(t) {
-          if (this.activeNodeList.length <= 0) return;
-          let e = Object(b["P"])(this.activeNodeList).filter((t) => !t.isRoot);
+        cutNode(t, nodes = this.activeNodeList) {
+          if (nodes.length <= 0) return;
+          let e = Object(b["P"])(nodes).filter((t) => !t.isRoot);
           e = Object(b["ub"])(e);
           const n = e.map((t) => Object(b["n"])({}, t, !0));
           (e.forEach((t) => {
@@ -62944,11 +62948,11 @@ PERFORMANCE OF THIS SOFTWARE.
             (this.activeHistoryIndex = 0),
             this.registerShortcutKeys(),
             (this.originAddHistory = this.addHistory.bind(this)),
-            (this.addHistory = Object(b["wb"])(
-              this.addHistory,
-              this.mindMap.opt.addHistoryTime,
-              this,
-            )),
+            (this.historyTimer = null),
+            (this.addHistory = () => {
+              if (!this.historyTimer) this.historyTimer = setTimeout(() => this.originAddHistory(), this.mindMap.opt.addHistoryTime);
+            }),
+            this.mindMap.on("beforeDestroy", () => clearTimeout(this.historyTimer)),
             (this.isPause = !1));
         }
         pause() {
@@ -62958,6 +62962,8 @@ PERFORMANCE OF THIS SOFTWARE.
           this.isPause = !1;
         }
         clearHistory() {
+          clearTimeout(this.historyTimer);
+          this.historyTimer = null;
           ((this.history = []),
             (this.activeHistoryIndex = 0),
             this.mindMap.emit("back_forward", 0, 0));
@@ -62972,10 +62978,13 @@ PERFORMANCE OF THIS SOFTWARE.
         }
         exec(t, ...e) {
           if (this.commands[t]) {
+            if (["BACK", "FORWARD"].includes(t) && this.historyTimer) this.originAddHistory();
+            const previous = /^(INSERT_(NODE|MULTI_NODE|CHILD_NODE|MULTI_CHILD_NODE|PARENT_NODE|AFTER|BEFORE)|REMOVE_(NODE|CURRENT_NODE)|CUT_NODE|MOVE_NODE_TO|MOVE_UP_ONE_LEVEL|UP_NODE|DOWN_NODE)$/.test(t) ? this.getCopyData() : null;
             if (
               (this.commands[t].forEach((t) => {
                 t(...e);
               }),
+              previous && this.mindMap.emit("checklist_structure_change", previous),
               this.mindMap.emit("afterExecCommand", t, ...e),
               [
                 "BACK",
@@ -62985,7 +62994,7 @@ PERFORMANCE OF THIS SOFTWARE.
               ].includes(t))
             )
               return;
-            this.addHistory();
+            t === "SET_NODE_CHECKED" ? this.originAddHistory() : this.addHistory();
           }
         }
         add(t, e) {
@@ -63001,6 +63010,8 @@ PERFORMANCE OF THIS SOFTWARE.
             } else ((this.commands[t] = []), delete this.commands[t]);
         }
         addHistory() {
+          clearTimeout(this.historyTimer);
+          this.historyTimer = null;
           if (this.mindMap.opt.readonly || this.isPause) return;
           this.mindMap.emit("beforeAddHistory");
           const t =
@@ -92703,16 +92714,7 @@ PERFORMANCE OF THIS SOFTWARE.
             isChecked() {
               return !!this.node.nodeData.data.checked;
             },
-            isIndeterminate() {
-              const t = this.node.children || [];
-              if (0 === t.length) return !1;
-              let e = 0;
-              t.forEach((t) => {
-                t.nodeData.data.checked && e++;
-              });
-              const n = t.length;
-              return e > 0 && e < n;
-            },
+            isIndeterminate() { return window.MindListModel.isPartial(this.node.nodeData); },
             checkboxStyle() {
               const t = this.node.getStyle("fontSize", !1) || 14,
                 e = Math.round(1.1 * t);
@@ -92727,40 +92729,10 @@ PERFORMANCE OF THIS SOFTWARE.
           },
           methods: {
             toggleCheck() {
-              const t = !this.node.nodeData.data.checked,
-                e = new Set();
-              (this.checkAllChildren(this.node, t, e),
-                this.updateParentCheck(this.node, e),
-                this.refreshCheckedStyles(e),
-                this.$bus.$emit("checklist_sync_from_mindmap"));
-              try {
-                if (this.mindMap) {
-                  const t = this.mindMap.getData(!0);
-                  (this.$bus.$emit("write_local_file", t),
-                    this.mindMap.emit("data_change", this.mindMap.getData()));
-                }
-              } catch (e) {
-                console.error(e);
-              }
-            },
-            checkAllChildren(t, e, n) {
-              (t.nodeData &&
-                t.nodeData.data.checked !== e &&
-                (this.$set(t.nodeData.data, "checked", e), n.add(t)),
-                t.children &&
-                  t.children.forEach((t) => this.checkAllChildren(t, e, n)));
-            },
-            updateParentCheck(t, e) {
-              const n = t.parent;
-              if (!n || !n.nodeData) return;
-              const i = n.children || [];
-              if (0 === i.length) return;
-              const r = i.every((t) => t.nodeData.data.checked),
-                o = !!n.nodeData.data.checked;
-              r !== o &&
-                (this.$set(n.nodeData.data, "checked", r),
-                e.add(n),
-                this.updateParentCheck(n, e));
+              if (!this.mindMap || this.mindMap.opt.readonly) return;
+              this.mindMap.renderer.textEdit.hideEditTextBox();
+              this.mindMap.command.originAddHistory();
+              this.mindMap.execCommand("SET_NODE_CHECKED", this.node, !this.node.nodeData.data.checked);
             },
             refreshCheckedStyles(t) {
               if (!this.mindMap) return;
@@ -92804,6 +92776,7 @@ PERFORMANCE OF THIS SOFTWARE.
         tE.init(_l),
         "undefined" !== typeof MoreThemes && MoreThemes.init(_l));
       var GH = {
+          props: { fileId: { type: String, default: null } },
           components: {
             OutlineSidebar: SE,
             Style: PE,
@@ -92881,6 +92854,7 @@ PERFORMANCE OF THIS SOFTWARE.
               this.getData(),
               this.init(),
               this.$bus.$on("execCommand", this.execCommand),
+              this.$bus.$on("desktop-edit-action", this.onDesktopEdit),
               this.$bus.$on("paddingChange", this.onPaddingChange),
               this.$bus.$on("export", this.export),
               this.$bus.$on("setData", this.setData),
@@ -92898,15 +92872,16 @@ PERFORMANCE OF THIS SOFTWARE.
                 this.onLocalStorageExceeded,
               ),
               window.addEventListener("resize", this.handleResize),
+              window.addEventListener("beforeunload", this.onBeforeUnload),
               this.$bus.$on("showDownloadTip", this.showDownloadTip),
               this.$bus.$on(
                 "mindmap_sync_from_checklist",
                 this.onChecklistChanged,
-              ),
-              this.webTip());
+              ));
           },
           beforeDestroy() {
             (this.$bus.$off("execCommand", this.execCommand),
+              this.$bus.$off("desktop-edit-action", this.onDesktopEdit),
               this.$bus.$off("paddingChange", this.onPaddingChange),
               this.$bus.$off("export", this.export),
               this.$bus.$off("setData", this.setData),
@@ -92924,6 +92899,7 @@ PERFORMANCE OF THIS SOFTWARE.
                 this.onLocalStorageExceeded,
               ),
               window.removeEventListener("resize", this.handleResize),
+              window.removeEventListener("beforeunload", this.onBeforeUnload),
               this.$bus.$off("showDownloadTip", this.showDownloadTip),
               this.$bus.$off(
                 "mindmap_sync_from_checklist",
@@ -92931,9 +92907,7 @@ PERFORMANCE OF THIS SOFTWARE.
               ),
               clearTimeout(this.storeDataTimer),
               clearTimeout(this.storeConfigTimer),
-              this.pendingRootData &&
-                (Object(ns["h"])({ root: this.pendingRootData }),
-                (this.pendingRootData = null)),
+              this.manualSave(),
               this.onDataChangeHandler &&
                 this.$bus.$off("data_change", this.onDataChangeHandler),
               this.onViewDataChangeHandler &&
@@ -92952,6 +92926,20 @@ PERFORMANCE OF THIS SOFTWARE.
               this.mindMap.destroy());
           },
           methods: {
+            refreshCheckedNodes(changed) {
+              const rendered = new Set();
+              changed.forEach(data => { if (data._node) rendered.add(data._node); });
+              const checkbox = this._checkboxInstanceMap.values().next().value;
+              if (checkbox) checkbox.refreshCheckedStyles(rendered);
+            },
+            onBeforeUnload(event) {
+              if (this.manualSave() === false) { event.preventDefault(); event.returnValue = false; }
+            },
+            onDesktopEdit(action) {
+              const commands = { undo: "BACK", redo: "FORWARD", selectAll: "SELECT_ALL" };
+              if (commands[action]) this.mindMap.execCommand(commands[action]);
+              else if (["copy", "cut", "paste"].includes(action)) this.mindMap.renderer[action]();
+            },
             onLocalStorageExceeded() {
               this.$notify({
                 type: "warning",
@@ -92991,32 +92979,33 @@ PERFORMANCE OF THIS SOFTWARE.
               ((this.mindMapData = Object(ns["b"])()),
                 (this.mindMapConfig = Object(ns["a"])() || {}));
             },
+            saveCurrentData() {
+              const saved = Object(ns["h"])(this.mindMap.getData(!0), this.fileId);
+              if (saved !== false) {
+                this.pendingRootData = null;
+                this.$bus.$emit("checklist_sync_from_mindmap");
+              }
+              return saved;
+            },
             bindSaveEvent() {
-              ((this.onDataChangeHandler = (t) => {
-                ((this.pendingRootData = t),
-                  clearTimeout(this.storeDataTimer),
-                  (this.storeDataTimer = setTimeout(() => {
-                    const t = this.pendingRootData;
-                    ((this.pendingRootData = null),
-                      t && Object(ns["h"])({ root: t }));
-                  }, 250)));
-              }),
-                (this.onViewDataChangeHandler = (t) => {
-                  (clearTimeout(this.storeConfigTimer),
-                    (this.storeConfigTimer = setTimeout(() => {
-                      Object(ns["h"])({ view: t });
-                    }, 300)));
-                }),
-                this.$bus.$on("data_change", this.onDataChangeHandler),
-                this.$bus.$on(
-                  "view_data_change",
-                  this.onViewDataChangeHandler,
-                ));
+              this.onDataChangeHandler = () => {
+                this.pendingRootData = window.MindListModel.snapshot(this.mindMap.getData(!0));
+                clearTimeout(this.storeDataTimer);
+                this.storeDataTimer = setTimeout(() => this.saveCurrentData(), 250);
+              };
+              this.onViewDataChangeHandler = () => {
+                clearTimeout(this.storeConfigTimer);
+                this.storeConfigTimer = setTimeout(() => this.saveCurrentData(), 300);
+              };
+              this.$bus.$on("data_change", this.onDataChangeHandler);
+              this.$bus.$on("view_data_change", this.onViewDataChangeHandler);
             },
             manualSave() {
-              (clearTimeout(this.storeDataTimer),
-                (this.pendingRootData = null),
-                Object(ns["h"])(this.mindMap.getData(!0)));
+              this.mindMap.renderer.textEdit.hideEditTextBox();
+              this.mindMap.command.originAddHistory();
+              clearTimeout(this.storeDataTimer);
+              clearTimeout(this.storeConfigTimer);
+              return this.saveCurrentData();
             },
             init() {
               let t = this.hasFileURL(),
@@ -93076,6 +93065,11 @@ PERFORMANCE OF THIS SOFTWARE.
                     switch ((console.error(e), t)) {
                       case "export_error":
                         this.$message.error(this.$t("edit.exportError"));
+                        break;
+                      case "read_clipboard_error":
+                      case "write_clipboard_error":
+                      case "load_clipboard_image_error":
+                        this.$message.error("剪贴板操作失败，请重试；剪切失败时节点会保留。");
                         break;
                       default:
                         break;
@@ -93171,6 +93165,14 @@ PERFORMANCE OF THIS SOFTWARE.
                   this.mindMap.on(t, (...e) => {
                     this.$bus.$emit(t, ...e);
                   });
+                }),
+                this.mindMap.on("checklist_structure_change", before => {
+                  const changed = window.MindListModel.reconcileStructure(before, this.mindMap.renderer.renderTree, this.$set.bind(this));
+                  this.refreshCheckedNodes(changed);
+                }),
+                this.mindMap.command.add("SET_NODE_CHECKED", (node, checked) => {
+                  const changed = window.MindListModel.setChecked(this.mindMap.renderer.renderTree, node.nodeData, checked, this.$set.bind(this));
+                  this.refreshCheckedNodes(changed);
                 }),
                 this.bindSaveEvent(),
                 window.takeOverApp &&
@@ -93272,16 +93274,6 @@ PERFORMANCE OF THIS SOFTWARE.
                 n = e.files && e.files[0];
               n && this.$bus.$emit("importFile", n);
             },
-            webTip() {
-              const t = "webUseTip",
-                e = localStorage.getItem(t);
-              e ||
-                (this.showDownloadTip(
-                  "重要提示",
-                  "网页版已暂停更新，部分功能缺失，请下载客户端获得完整体验~",
-                ),
-                localStorage.setItem(t, 1));
-            },
             showDownloadTip(t, e) {
               const n = this.$createElement;
               this.$msgbox({
@@ -93325,6 +93317,18 @@ PERFORMANCE OF THIS SOFTWARE.
         YH = KH.exports,
         ZH = n("d763"),
         XH = {
+          beforeRouteLeave(to, from, next) {
+            const findEditor = component => {
+              if (component.mindMap && typeof component.manualSave === "function") return component;
+              for (const child of component.$children || []) {
+                const editor = findEditor(child);
+                if (editor) return editor;
+              }
+              return null;
+            };
+            const editor = findEditor(this);
+            next(editor && editor.manualSave() === false ? false : undefined);
+          },
           components: { Toolbar: fs, Edit: YH },
           data() {
             return { show: !1, fileId: null };

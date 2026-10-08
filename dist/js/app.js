@@ -28,7 +28,7 @@
     r = { app: 0 },
     a = [];
   function l(e) {
-    return c.p + "js/" + ({}[e] || e) + ".js";
+    return c.p + "js/" + ({}[e] || e) + ".js?v=1.1.2";
   }
   function c(t) {
     if (o[t]) return o[t].exports;
@@ -1046,27 +1046,27 @@
         }
         return e === t;
       },
-      me = () =>
-        navigator.clipboard && "function" === typeof navigator.clipboard.read,
-      fe = (e) => {
-        navigator.clipboard &&
-          navigator.clipboard.writeText &&
-          navigator.clipboard.writeText(JSON.stringify(e));
+      me = () => !!(window.electronAPI && window.electronAPI.readClipboard || navigator.clipboard && (navigator.clipboard.read || navigator.clipboard.readText)),
+      fe = async (e) => {
+        const text = JSON.stringify(e);
+        if (window.electronAPI && window.electronAPI.writeClipboardText)
+          return window.electronAPI.writeClipboardText(text);
+        if (!navigator.clipboard || !navigator.clipboard.writeText) throw new Error("Clipboard unavailable");
+        await navigator.clipboard.writeText(text);
       },
       Te = async () => {
-        let e = null,
-          t = null;
-        if (me()) {
-          const n = await navigator.clipboard.read();
-          if (n && n.length > 0)
-            for (const o of n)
-              for (const n of o.types)
-                if (/^image\//.test(n)) t = await o.getType(n);
-                else if ("text/plain" === n) {
-                  const t = await o.getType(n);
-                  e = await t.text();
-                }
+        if (window.electronAPI && window.electronAPI.readClipboard) {
+          const value = await window.electronAPI.readClipboard();
+          return { text: value.text, img: value.imageDataUrl ? await (await fetch(value.imageDataUrl)).blob() : null };
         }
+        let e = null, t = null;
+        if (navigator.clipboard && navigator.clipboard.read) {
+          const n = await navigator.clipboard.read();
+          for (const o of n)
+            for (const n of o.types)
+              if (/^image\//.test(n)) t = await o.getType(n);
+              else if ("text/plain" === n) e = await (await o.getType(n)).text();
+        } else if (navigator.clipboard && navigator.clipboard.readText) e = await navigator.clipboard.readText();
         return { text: e, img: t };
       },
       ye = (e) => {
@@ -1389,27 +1389,31 @@
           return Object(i["tb"])(o["a"]);
         }
       },
-      f = (e) => {
+      f = (e, fileId = p) => {
         try {
           let t = null;
           if (
-            ((t = window.takeOverApp ? u : m()),
+            ((t = window.takeOverApp ? u : fileId && fileId !== p ? Object(l["d"])(fileId) : m()),
             t || (t = {}),
-            (t = { ...t, ...e }),
-            (u = t),
+            (t = window.MindListModel.snapshot({ ...t, ...e })),
             window.takeOverApp)
           )
-            return ((u = t), void window.takeOverAppMethods.saveMindMapData(t));
+            return (window.takeOverAppMethods.saveMindMapData(t), (u = t), true);
           if (
             (r["default"].prototype.$bus.$emit("write_local_file", t),
             a["a"].state.isHandleLocalFile)
           )
             return;
-          if (p) return void Object(l["g"])(p, t);
-          localStorage.setItem(c, JSON.stringify(t));
+          if (fileId) {
+            if (!Object(l["g"])(fileId, t)) return false;
+          } else localStorage.setItem(c, JSON.stringify(t));
+          if (fileId === p) u = t;
+          window.MindListModel.clearSaveError();
+          return true;
         } catch (t) {
           (console.log(t),
-            r["default"].prototype.$bus.$emit("localStorageExceeded"));
+            window.dispatchEvent(new Event("mindlist-save-error")));
+          return false;
         }
       },
       T = () => {
@@ -4073,14 +4077,33 @@
           return null;
         }
       },
-      h = (e, t) => {
+      h = (e, t, title) => {
         try {
-          localStorage.setItem(i + e, JSON.stringify(t));
-          const n = c(),
-            o = n.find((t) => t.id === e);
-          o && ((o.updatedAt = new Date().toISOString()), d(n));
+          const data = window.MindListModel.snapshot(t), previous = s(e), list = c(), file = list.find(item => item.id === e);
+          if (file) {
+            file.updatedAt = new Date().toISOString();
+            if (previous && previous.root && data.root && window.MindListModel.visibleText(previous.root.data.text) !== window.MindListModel.visibleText(data.root.data.text))
+              file.name = window.MindListModel.visibleText(data.root.data.text);
+            if (typeof title === "string") file.name = title;
+          }
+          const serialized = JSON.stringify(data), serializedList = JSON.stringify(list);
+          const oldData = localStorage.getItem(i + e), oldList = localStorage.getItem(o);
+          try {
+            localStorage.setItem(i + e, serialized);
+            localStorage.setItem(o, serializedList);
+          } catch (error) {
+            try {
+              oldData === null ? localStorage.removeItem(i + e) : localStorage.setItem(i + e, oldData);
+              oldList === null ? localStorage.removeItem(o) : localStorage.setItem(o, oldList);
+            } catch (_) {}
+            throw error;
+          }
+          window.MindListModel.clearSaveError();
+          return true;
         } catch (n) {
           console.error("saveFileData error:", n);
+          window.dispatchEvent(new Event("mindlist-save-error"));
+          return false;
         }
       },
       u = (e = "新建清单") => {

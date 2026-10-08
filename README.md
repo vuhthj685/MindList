@@ -1,209 +1,55 @@
 # MindList
-MindList是一款把「思维导图」和「任务清单」结合在一起的工具。你可以一边梳理结构，一边管理执行进度。
 
-本项目基于https://github.com/wanglin2/mind-map mind-map基础上进行二次开发！
----
-🧠 MindList🧾 —— 思维导图 + 清单任务，双向同步
-MindList = 思维导图 + 清单任务
-在思维导图里勾选节点，清单主页自动同步进度；在清单里打勾，思维导图节点自动完成。
-支持本地文件、多主题、AI 生成、大纲模式、导入/导出……一个工具搞定思考与执行。
+MindList 将思维导图与任务清单结合，让你在同一份内容中梳理思路、拆解目标和管理进度。
 
- 👀立即使用
-- 🚀在线网页版（直接打开）：https://vuhthj685.github.io/MindList/
-- 🍎macOS 版（Intel / Apple Silicon）：https://github.com/vuhthj685/MindList/releases/latest
-- 🪟Windows 安装版 / 便携版：https://github.com/vuhthj685/MindList/releases/latest
-- 🗄项目仓库：https://github.com/vuhthj685/MindList
+## 使用与下载
 
-> 当前桌面包尚未使用付费开发者证书签名。macOS 首次打开时如被系统拦截，请在“系统设置 → 隐私与安全性”中选择仍要打开；Windows 可能显示 SmartScreen 提示。
+- [在线使用](https://vuhthj685.github.io/MindList/)
+- [macOS · Apple Silicon](https://github.com/vuhthj685/MindList/releases/latest/download/MindList-1.1.2-macOS-arm64.dmg)
+- [macOS · Intel](https://github.com/vuhthj685/MindList/releases/latest/download/MindList-1.1.2-macOS-x64.dmg)
+- [Windows · 安装版](https://github.com/vuhthj685/MindList/releases/latest/download/MindList-1.1.2-Windows-Setup-x64.exe)
+- [Windows · 便携版](https://github.com/vuhthj685/MindList/releases/latest/download/MindList-1.1.2-Windows-Portable-x64.exe)
 
----
-📸 功能预览
-<img width="1723" height="852" alt="image" src="https://github.com/user-attachments/assets/5f9db7f3-75be-4bb6-b91d-03422c1b58d8" />
-<img width="1712" height="839" alt="image" src="https://github.com/user-attachments/assets/cd77b5de-9d4e-4754-bd5e-7a7fce4e197e" />
+全部版本与历史下载见 [Releases](https://github.com/vuhthj685/MindList/releases)。
 
-✨ 核心亮点
+桌面版尚未使用开发者证书签名。首次打开时，macOS 或 Windows 可能显示系统安全提示。
 
-- 🔄 双向同步：思维导图的复选框 ↔ 清单任务列表，任意一端操作，两端实时联动
-- ✅ 节点复选框：每个节点自带可勾选的方框，支持父子级联动（父勾选 → 全子勾选）
-- 📋 清单主页：卡片式管理多个清单，进度条、节点层级一目了然
-- 🎨 高度可定制：6 套预设主题 + 自定义主色 + 背景图片 + 透明度调节
-- 🧩 完整思维导图功能：富文本、图片、公式、超链接、标签、备注、外框、摘要、关联线……
-- 🧭 多种布局：逻辑结构图、思维导图、组织架构图、时间线、鱼骨图等（部分为原版付费内容）
-- 💾 本地优先：数据存于 localStorage，支持打开/保存/另存为本地 .smm 文件
-- 🤖 AI 辅助：输入提示词自动生成思维导图（支持自定义 API）
-- 🌍 多语言：中文、English、繁体中文、Tiếng Việt
-- 📦 跨平台：网页版（GitHub Pages） + 桌面客户端（Electron）
-- ⬅导出支持：PNG / JPG / SVG / PDF / Markdown / XMind / TXT
-- ➡导入支持：.smm / .json / .xmind / .md / .xlsx 文件
+## 主要功能
 
-- ## 数据与隐私
+- **思维导图与清单联动**：两种视图编辑同一份内容，任务完成状态自动同步。
+- **任务层级与进度**：支持父子任务勾选、部分完成、折叠展开和多清单管理。
+- **灵活编辑**：节点拖拽、富文本、图片、链接、备注、标签、公式及撤销重做。
+- **多种呈现方式**：支持主题、背景、大纲，以及思维导图、逻辑结构、组织结构和时间线等布局。
+- **文件与扩展**：支持清单文件导入导出、图片导出，以及配置自有接口的 AI 辅助功能。
 
-- 网页版默认将数据保存在用户自己的浏览器本地
-- 不会自动把用户数据上传到你的 GitHub 仓库
-- 建议定期导出文件备份，避免因清理浏览器缓存导致数据丢失
+## 数据与备份
 
-功能汇总
+数据默认保存在当前浏览器或桌面应用的本地存储中。网页版与桌面版各自保存，不提供跨端云同步。
 
-一、画布操作（原）
+建议定期导出清单备份。清理浏览器或应用数据前，请先确认备份可用。
 
-- 自由拖拽、缩放画布，鼠标滚轮缩放
-- 缩放工具栏（放大、缩小、适应画布、100%）
-- 小地图（MiniMap），快速定位当前视口位置
-- 画布滚动条
-- 框选节点（矩形拖拽多选）
-- 键盘方向键导航节点
-- 全屏模式
-- 演示模式（Demonstrate，节点逐步展示）
----
-二、节点编辑（原）
+## 开发
 
-- 双击节点进入文本编辑
-- 富文本编辑（加粗、斜体、颜色、字号等），可选开启/关闭
-- Tab 新增子节点，Enter 新增兄弟节点，Delete 删除节点
-- 拖拽节点调整位置
-- 节点图片插入、图片位置调整（上下左右）、图片删除、图片预览
-- 节点超链接
-- 节点备注（Note，支持 Markdown，双击跳出侧边栏编辑）
-- 节点标签（Tag）
-- 节点图标（从图标库选择，可自定义图标集）
-- 节点附件
-- 节点数学公式（Formula，LaTeX 语法）
-- 节点外框（OuterFrame，将节点分组圈起）
-- 节点摘要（Generalization，悬挂在一组节点旁的摘要说明）
-- 节点关联线（AssociativeLine，节点之间的自定义连线和标注）
-- 格式刷（Painter，复制节点样式并批量应用）
-- 节点自定义宽度拖拽调整
-- 剪切板文本粘贴智能处理（按换行分割创建多个节点）
----
-三、节点样式（原）
+使用 Node.js 24 安装依赖：
 
-- 字体、字号、字体颜色、背景色、边框色、边框宽度、边框样式
-- 节点形状（矩形、圆角矩形、菱形、平行四边形等）
-- 节点连线样式（直线、折线、曲线）
-- 连线颜色、宽度、虚线样式
-- 节点标签样式自定义
-- 关联线样式自定义
-- 全局基础样式批量设置
----
-四、主题与布局（原）
+```sh
+npm ci
+npm start
+```
 
-- 内置多套主题模板（经典、暗色、彩色等，含第三方扩展主题包）
-- 切换布局：逻辑结构图、思维导图、组织架构图、目录组织图、时间线、垂直时间线、鱼骨图
-- 彩虹线条（RainbowLines，每条分支自动着不同颜色）
-- 暗黑模式（界面整体切换为深色）
----
-五、大纲模式（原）
+运行检查及构建：
 
-- 工具栏切换到大纲视图，以列表树形式显示所有节点
-- 大纲内支持直接编辑节点文本
-- 大纲与思维导图实时双向同步
----
-六、搜索（原）
+```sh
+npm test
+npm run test:desktop
+npm run dist:mac
+npm run dist:win
+```
 
-- 全局节点内容关键词搜索
-- 高亮匹配节点，支持上一个/下一个跳转
----
-七、右键菜单（原）
+`dist/` 是网页版和桌面版共用的页面资源。正式安装包由 GitHub Actions 构建，并发布至 Releases。
 
-- 右键节点弹出操作菜单（新增、删除、复制、粘贴、剪切、编辑、格式刷、展开/收起等）
-- 右键画布弹出画布操作菜单（全选、粘贴等）
----
-八、导入 / 导出（原）
+## 开源来源
 
-- 导出：PNG / JPG / SVG / PDF / Markdown / XMind / TXT
-- 导入：.smm / .json / .xmind / .md / .xlsx 文件
-- 支持拖拽文件到画布直接导入
-- 支持水印图片导出
----
-九、本地文件操作（原）
+MindList 基于 [mind-map](https://github.com/wanglin2/mind-map) 二次开发，增加清单管理与任务状态联动。感谢上游项目与相关开源依赖。
 
-- 打开本地 .smm 文件（File System Access API）
-- 创建新的本地 .smm 文件
-- 另存为本地文件
-- 扫描本地文件目录，树形展示可导入/编辑的文件
-- 实时写入本地文件（编辑时自动同步，防止未保存丢失）
----
-十、快捷键（原）
-
-- Tab：新增子节点
-- Enter：新增兄弟节点
-- Delete / Backspace：删除节点
-- Ctrl+C / V / X：复制 / 粘贴 / 剪切
-- Ctrl+Z / Y：撤销 / 重做
-- Ctrl+S：手动保存
-- F2：进入节点文本编辑
-- 方向键：节点焦点移动
-- Ctrl+A：全选节点
-- 可在快捷键面板查看全部快捷键
----
-十一、数据持久化（原）
-
-- 数据存储于浏览器 localStorage，无需服务器
-- 多文件管理（多个清单独立存储，互不干扰）
-- 自动实时保存；Ctrl+S 手动强制保存
-- 旧版单文件数据自动迁移兼容
----
-十二、目标清单主页（✨新增✨）
-
-- 首页卡片网格展示所有清单
-- 每张卡片显示：名称、完成进度条、节点任务层级列表
-- 新建、删除、重命名清单
-- 顶部总完成度汇总（百分比）
-- 点击卡片图标可进入思维导图编辑页
-- <img width="1280" height="626" alt="image" src="https://github.com/user-attachments/assets/c230d066-b36c-4c60-aa0a-f4587a8bc2a7" />
-- <img width="1397" height="865" alt="image" src="https://github.com/user-attachments/assets/97d93178-a657-4960-ac5a-46696f12c92c" />
-- <img width="1399" height="835" alt="image" src="https://github.com/user-attachments/assets/60e6aa2a-3c86-4c36-ab6e-aebe9b2c0b3c" />
----
-十三、清单节点任务列表（✨新增✨）
-
-- 节点层级展示（最多20层）
-- 折叠/展开子节点
-- 双击编辑节点文本
-- 新建子节点/新建二级节点
-- 节点特殊内容标记（图片、链接、图标、备注、公式等）
-- 节点复选框（完成标记），完成状态显示删除线+变灰
-- 勾选支持父子级联动（父节点勾选 → 所有子节点跟随）
-- <img width="1398" height="869" alt="image" src="https://github.com/user-attachments/assets/b1d9272a-dc7b-46ea-b8a2-b292c62f05e0" />
-
-
----
-十四、节点复选框（✨新增✨）
-
-- 每个节点文字末尾嵌入正方形复选框
-- 方框大小随字号动态缩放，垂直对齐文字中心
-- 点击切换勾选，支持父子联动
-- 切换主题后复选框正常工作（WeakMap 管理实例）
-- <img width="1402" height="868" alt="image" src="https://github.com/user-attachments/assets/b26aa644-717a-426b-8748-cfd88b5cd402" />
-
-
----
-十五、双向数据同步（✨新增✨）
-
-- 思维导图复选框操作 → 实时同步到清单主页任务列表
-- 清单主页勾选操作 → 思维导图节点状态实时更新
-- 通过全局事件总线（$bus）通信，无需刷新
----
-十六、主页主题与外观（✨新增✨）
-
-- 6 套预设主题（白、暗黑、绿、蓝、橙、薰衣草）
-- 自定义主色（颜色选择器）
-- 卡片透明度调节（10%~100%）
-- 自定义背景图片，可框选显示区域、调节透明度
-- 所有外观设置持久化到 localStorage
-- <img width="1280" height="627" alt="image" src="https://github.com/user-attachments/assets/6f0f2e1e-3c12-4862-9f61-60dd29dd4e7a" />
-
----
-十七、AI 功能（原）
-
-- AI 辅助生成思维导图（输入提示词自动生成节点结构）
-- AI 对话面板（AiChat）
-- AI 配置对话框（支持自定义 API 配置）（目前仅支持火山引擎）
-- 可在设置中开启/关闭 AI 功能
----
-十八、设置与其他（原）
-
-- 全局设置面板（节点间距、字体、图片文字间距、展开按钮等）
-- 多语言支持（中文、英文、繁体中文、越南语）
-- 暗黑模式开关
-- 富文本模式开关
-
+Electron 与 Chromium 的许可说明随相关运行环境提供，仓库保留对应许可证文件。

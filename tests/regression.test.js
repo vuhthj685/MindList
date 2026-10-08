@@ -24,7 +24,7 @@ test("web entry references every required runtime asset", () => {
 
 test("drag saves are coalesced and listeners are removed", () => {
   assert.match(editor, /storeDataTimer: null/);
-  assert.match(editor, /this\.pendingRootData = t/);
+  assert.match(editor, /this\.pendingRootData = window\.MindListModel\.snapshot/);
   assert.match(editor, /this\.\$bus\.\$off\("data_change", this\.onDataChangeHandler\)/);
   assert.match(editor, /"view_data_change",\s+this\.onViewDataChangeHandler/);
 });
@@ -103,7 +103,7 @@ test("external navigation is restricted to HTTP and HTTPS", () => {
 
 test("desktop packaging targets both macOS and Windows", () => {
   assert.equal(packageJson.main, "electron/main.js");
-  assert.deepEqual(packageJson.build.mac.target, ["dmg", "zip"]);
+  assert.deepEqual(packageJson.build.mac.target, ["dmg"]);
   assert.deepEqual(packageJson.build.win.target, ["nsis", "portable"]);
   assert.equal(packageJson.devDependencies.electron, "43.2.0");
   assert.match(packageJson.scripts["dist:mac"], /--publish never/);
