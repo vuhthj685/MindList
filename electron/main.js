@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, ipcMain, shell } = require("electron");
+const { app, BrowserWindow, Menu, ipcMain, shell, clipboard } = require("electron");
 const path = require("node:path");
 const { pathToFileURL } = require("node:url");
 
@@ -25,6 +25,20 @@ function openExternalUrl(targetUrl) {
 }
 
 function registerIpcHandlers() {
+  ipcMain.handle("clipboard-read", (event) => {
+    if (!isMainWindowSender(event)) throw new Error("Invalid clipboard sender");
+    const image = clipboard.readImage();
+    return { text: clipboard.readText(), imageDataUrl: image.isEmpty() ? null : image.toDataURL() };
+  });
+  ipcMain.handle("clipboard-write-text", (event, text) => {
+    if (!isMainWindowSender(event) || typeof text !== "string") throw new Error("Invalid clipboard request");
+    clipboard.writeText(text);
+  });
+  ipcMain.handle("edit-text", (event, action) => {
+    if (!isMainWindowSender(event) || !["undo", "redo", "cut", "copy", "paste", "selectAll"].includes(action))
+      throw new Error("Invalid edit request");
+    mainWindow.webContents[action]();
+  });
   ipcMain.on("window-minimize", (event) => {
     if (isMainWindowSender(event)) mainWindow.minimize();
   });
@@ -56,6 +70,21 @@ function createApplicationMenu() {
           click: () => app.quit(),
         },
       ],
+    },
+    {
+      label: "编辑",
+      submenu: [
+        ["撤销", "undo", "CmdOrCtrl+Z"],
+        ["重做", "redo", "CmdOrCtrl+Shift+Z"],
+        ["剪切", "cut", "CmdOrCtrl+X"],
+        ["复制", "copy", "CmdOrCtrl+C"],
+        ["粘贴", "paste", "CmdOrCtrl+V"],
+        ["全选", "selectAll", "CmdOrCtrl+A"],
+      ].map(([label, action, accelerator]) => ({ label, accelerator,
+        click: (_item, focusedWindow) => {
+          if (focusedWindow === mainWindow) mainWindow.webContents.send("desktop-edit-action", action);
+        },
+      })),
     },
     {
       label: "视图",

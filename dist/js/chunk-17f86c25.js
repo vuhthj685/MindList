@@ -724,6 +724,7 @@
                           key: s._id || i,
                           attrs: {
                             node: s,
+                            root: t.data.root,
                             level: 0,
                             maxLevel: 19,
                             themeTextColor: t.themeTextColor,
@@ -979,7 +980,7 @@
                       "span",
                       {
                         staticClass: "cb",
-                        class: { cbChecked: t.node.data.checked },
+                        class: { cbChecked: t.node.data.checked || t.isIndeterminate },
                       },
                       [
                         t.node.data.checked
@@ -1005,7 +1006,7 @@
                                 }),
                               ],
                             )
-                          : t._e(),
+                          : t.isIndeterminate ? e("span", [t._v("—")]) : t._e(),
                       ],
                     ),
                   ],
@@ -1021,6 +1022,7 @@
                       key: s._id || i,
                       attrs: {
                         node: s,
+                        root: t.root,
                         level: t.level + 1,
                         maxLevel: t.maxLevel,
                         themeTextColor: t.themeTextColor,
@@ -1113,6 +1115,7 @@
           name: "NodeItem",
           props: {
             node: { type: Object, required: !0 },
+            root: { type: Object, required: !0 },
             level: { type: Number, default: 0 },
             maxLevel: { type: Number, default: 19 },
             themeTextColor: { type: String, default: "#333333" },
@@ -1133,6 +1136,7 @@
             displayText() {
               return l(this.node.data.text);
             },
+            isIndeterminate() { return window.MindListModel.isPartial(this.node); },
             contentTags() {
               const t = this.node.data,
                 e = [];
@@ -1152,16 +1156,8 @@
               this.hasChildren && (this.isCollapsed = !this.isCollapsed);
             },
             toggleCheck() {
-              const t = !this.node.data.checked;
-              (this.$set(this.node.data, "checked", t),
-                this.cascadeDown(this.node, t),
-                this.$emit("change"));
-            },
-            cascadeDown(t, e) {
-              t.children &&
-                t.children.forEach((t) => {
-                  (this.$set(t.data, "checked", e), this.cascadeDown(t, e));
-                });
+              window.MindListModel.setChecked(this.root, this.node, !this.node.data.checked, this.$set.bind(this));
+              this.$emit("change");
             },
             startEdit() {
               ((this.editText = this.displayText),
@@ -1443,11 +1439,15 @@
         E = "MIND_MAP_HOME_BG_POS";
       var O = {
           name: "HomePage",
+          beforeRouteLeave(to, from, next) { next(this.flushCardSaves() ? undefined : false); },
           components: { ChecklistCard: I },
           data() {
             return {
               fileList: [],
               fileDataCache: {},
+              cardHistory: {},
+              pendingCardSaves: {},
+              activeHistoryFile: null,
               presetThemes: [...B],
               currentThemeId: "default",
               customAccentColor: "#409eff",
@@ -1507,12 +1507,18 @@
               this.$bus.$on(
                 "checklist_sync_from_mindmap",
                 this.onMindMapChanged,
-              ));
+              ),
+              this.$bus.$on("desktop-edit-action", this.onDesktopEdit),
+              window.addEventListener("keydown", this.onHistoryKey),
+              window.addEventListener("beforeunload", this.onBeforeUnload));
           },
           activated() {
             this.loadFiles();
           },
           beforeDestroy() {
+            window.removeEventListener("keydown", this.onHistoryKey);
+            window.removeEventListener("beforeunload", this.onBeforeUnload);
+            this.$bus.$off("desktop-edit-action", this.onDesktopEdit);
             this.$bus.$off(
               "checklist_sync_from_mindmap",
               this.onMindMapChanged,
@@ -1523,7 +1529,7 @@
               const t = Object(m["e"])();
               ((this.fileList = t),
                 t.forEach((t) => {
-                  const e = Object(m["d"])(t.id);
+                  const e = this.pendingCardSaves[t.id] || Object(m["d"])(t.id);
                   e && this.$set(this.fileDataCache, t.id, e);
                 }));
             },
@@ -1556,26 +1562,67 @@
               (Object(m["c"])(t),
                 (this.fileList = this.fileList.filter((e) => e.id !== t)),
                 this.$delete(this.fileDataCache, t),
+                this.$delete(this.pendingCardSaves, t),
                 this.$message.success("已删除"));
             },
             renameChecklist(t, e) {
-              Object(m["f"])(t, e);
-              const s = this.fileList.find((e) => e.id === t);
-              s && (s.name = e);
-              const i = this.fileDataCache[t];
-              i &&
-                i.root &&
-                (this.$set(i.root, "data", { ...i.root.data, text: e }),
-                Object(m["g"])(t, i),
-                this.$set(this.fileDataCache, t, { ...i }));
+              const data = window.MindListModel.snapshot(this.fileDataCache[t]);
+              if (!data || !data.root) return;
+              window.MindListModel.renameRoot(data.root, e);
+              if (Object(m["g"])(t, data, e)) {
+                this.$delete(this.pendingCardSaves, t);
+                this.loadFiles();
+                this.$bus.$emit("mindmap_sync_from_checklist", t);
+              }
             },
             onMindMapChanged() {
               this.loadFiles();
             },
             onCardChange(t, e) {
-              (Object(m["g"])(t, e),
-                this.$set(this.fileDataCache, t, { ...e }),
-                this.$bus.$emit("mindmap_sync_from_checklist", t));
+              const before = Object(m["d"])(t);
+              window.MindListModel.reconcileStructure(before.root, e.root, this.$set.bind(this));
+              const after = window.MindListModel.snapshot(e);
+              if (!Object(m["g"])(t, after)) { this.$set(this.pendingCardSaves, t, after); this.$set(this.fileDataCache, t, after); return false; }
+              this.$delete(this.pendingCardSaves, t);
+              const history = this.cardHistory[t] || (this.cardHistory[t] = { entries: [], index: 0 });
+              history.entries = history.entries.slice(0, history.index);
+              history.entries.push({ before, after });
+              if (history.entries.length > 100) history.entries.shift();
+              history.index = history.entries.length;
+              this.activeHistoryFile = t;
+              this.$set(this.fileDataCache, t, after);
+              this.$bus.$emit("mindmap_sync_from_checklist", t);
+              return true;
+            },
+            flushCardSaves() {
+              return Object.keys(this.pendingCardSaves).every(id => this.onCardChange(id, this.pendingCardSaves[id]) !== false);
+            },
+            onBeforeUnload(event) {
+              if (!this.flushCardSaves()) { event.preventDefault(); event.returnValue = false; }
+            },
+            onHistoryKey(event) {
+              const target = event.target;
+              if (target && (target.matches("input,textarea") || target.isContentEditable)) return;
+              if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "s") { event.preventDefault(); this.flushCardSaves(); return; }
+              if ((event.metaKey || event.ctrlKey) && ["z", "y"].includes(event.key.toLowerCase())) {
+                event.preventDefault();
+                this.onDesktopEdit(event.shiftKey || event.key.toLowerCase() === "y" ? "redo" : "undo");
+              }
+            },
+            onDesktopEdit(action) {
+              if (!["undo", "redo"].includes(action)) return;
+              if (!this.flushCardSaves()) return;
+              const id = this.activeHistoryFile, history = this.cardHistory[id];
+              if (!history) return;
+              const undo = action === "undo", entry = history.entries[undo ? history.index - 1 : history.index];
+              if (!entry) return;
+              const current = Object(m["d"])(id), expected = undo ? entry.after : entry.before;
+              if (JSON.stringify(current) !== JSON.stringify(expected)) { delete this.cardHistory[id]; return; }
+              const data = window.MindListModel.snapshot(undo ? entry.before : entry.after);
+              if (!Object(m["g"])(id, data)) return;
+              history.index += undo ? -1 : 1;
+              this.$set(this.fileDataCache, id, data);
+              this.$bus.$emit("mindmap_sync_from_checklist", id);
             },
             loadTheme() {
               try {
