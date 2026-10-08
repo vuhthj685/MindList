@@ -1,2 +1,5 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Third-party license documentation is not application source code.
+LICENSES.chromium.html linguist-documentation=true
